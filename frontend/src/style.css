@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@import "./assets/fonts/fonts.css";
+
+@theme {
+  --font-raleway: "Raleway", sans-serif;
+  --font-unbounded: "Unbounded", sans-serif;
+}
