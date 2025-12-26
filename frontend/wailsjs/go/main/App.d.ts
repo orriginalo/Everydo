@@ -12,6 +12,6 @@ export function DeleteCategory(arg1:number):Promise<void>;
 
 export function GetCategories():Promise<Array<models.Category>>;
 
-export function GetTasks(arg1:number):Promise<Record<string, Array<models.Task>>>;
+export function GetTasks(arg1:number):Promise<Array<models.Task>>;
 
 export function UncompleteTask(arg1:number):Promise<void>;

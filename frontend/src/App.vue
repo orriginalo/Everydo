@@ -9,41 +9,47 @@ import TasksPanelComponent from './components/TasksPanelComponent.vue'
 import { useTasksStore } from './stores/useTasksStore'
 import CreateTaskModal from './components/CreateTaskModal.vue'
 import { storeToRefs } from 'pinia'
+import ConfirmModal from './components/ConfirmModal.vue'
 
 const categoriesStore = useCategoriesStore()
 const tasksStore = useTasksStore()
 
-const { categories, activeCategory, isCreateCategoryModalOpen } = storeToRefs(categoriesStore)
-const { loadCategories, setActiveCategory } = categoriesStore
+const { categories, activeCategory, isCreateCategoryModalOpen, toDeleteCategory } =
+  storeToRefs(categoriesStore)
+const { loadCategories, setActiveCategory, deleteCategoryForce } = categoriesStore
 
-onMounted(() => {
-  categoriesStore.getCategories()
+onMounted(async () => {
+  await loadCategories()
 })
 </script>
 
 <template>
-  <div class="flex h-screen bg-neutral-900 text-neutral-100">
+  <div class="flex h-screen bg-neutral-900 text-neutral-100 overflow-hidden">
     <Sidebar />
 
     <main class="flex-1 p-6 bg-neutral-900">
       <div
         v-if="categories.length > 0"
-        class="h-full rounded-lg border border-neutral-800 bg-neutral-850 p-6"
+        class="flex flex-col h-full rounded-lg border border-neutral-800 bg-neutral-850 p-6"
       >
-        <div class="flex flex-row justify-between">
+        <div class="flex flex-row justify-between mb-2">
           <h1 class="text-2xl font-semibold mb-2 font-unbounded">
             {{ activeCategory?.name }}
           </h1>
           <button
             @click="tasksStore.toggleIsCreateModalOpen"
-            class="bg-neutral-900 px-1 py-0 rounded-full hover:bg-neutral-800 hover:cursor-pointer"
+            class="flex flex-row items-center gap-2 font-unbounded bg-neutral-800 px-2 rounded-full hover:bg-neutral-700 hover:cursor-pointer"
           >
-            <Icon icon="ic:baseline-plus" />
+            <Icon icon="ic:baseline-plus" width="20" />
           </button>
         </div>
 
         <!-- <p class="text-neutral-400">Контент для выбранной категории</p> -->
-        <TasksPanelComponent v-if="activeCategory" :category_id="activeCategory.id" />
+        <TasksPanelComponent
+          v-if="activeCategory"
+          :category_id="activeCategory.id"
+          class="flex-1 overflow-y-auto"
+        />
       </div>
       <div
         v-else
@@ -51,6 +57,15 @@ onMounted(() => {
       ></div>
     </main>
   </div>
-  <CreateCatModal v-if="isCreateCategoryModalOpen" />
-  <CreateTaskModal v-if="tasksStore.isCreateModalOpen" />
+  <CreateCatModal v-model:show="isCreateCategoryModalOpen" />
+  <CreateTaskModal v-model:show="tasksStore.isCreateModalOpen" />
+  <ConfirmModal
+    v-model:show="categoriesStore.isDeleteModalOpen"
+    title="Удалить категорию?"
+    description="Вместе с категорией удалятся все задачи из неё. Это действие нельзя будет отменить."
+    confirmText="Удалить"
+    cancelText="Отмена"
+    @confirm="deleteCategoryForce(categoriesStore.toDeleteCategory)"
+    @cancel="() => {}"
+  />
 </template>

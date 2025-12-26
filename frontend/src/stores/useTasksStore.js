@@ -1,11 +1,37 @@
 import { defineStore } from 'pinia'
-import { CreateTask, GetTasks } from '../../wailsjs/go/main/App'
+import { CompleteTask, CreateTask, GetTasks, UncompleteTask } from '../../wailsjs/go/main/App'
 import { models } from '../../wailsjs/go/models'
 import { ref } from 'vue'
 
 export const useTasksStore = defineStore('tasks', () => {
   const tasksByCategory = ref({})
   const isCreateModalOpen = ref(false)
+
+  function completeTask(task) {
+    CompleteTask(task.id).then(() => {
+      console.log('Task completed')
+      loadTasks(task.category_id)
+    })
+  }
+
+  function uncompleteTask(task) {
+    UncompleteTask(task.id).then(() => {
+      console.log('Task uncompleted')
+      loadTasks(task.category_id)
+    })
+  }
+
+  function loadTasks(categoryId) {
+    GetTasks(categoryId)
+      .then((tasks) => {
+        console.log('tasks loaded')
+        console.log(tasks)
+        tasksByCategory.value[categoryId] = tasks
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+  }
 
   function toggleIsCreateModalOpen() {
     isCreateModalOpen.value = !isCreateModalOpen.value
@@ -14,15 +40,7 @@ export const useTasksStore = defineStore('tasks', () => {
   function createTask(categoryId, name, reloadType, reloadEvery, resetTime, resetWeekday) {
     return CreateTask(categoryId, name, reloadType, reloadEvery, resetTime, resetWeekday).then(
       (id) => {
-        if (!tasksByCategory.value[categoryId]) {
-          tasksByCategory.value[categoryId] = {
-            daily: [],
-            weekly: [],
-            custom: [],
-          }
-        }
-
-        tasksByCategory.value[categoryId][reloadType].push({
+        tasksByCategory.value[categoryId].push({
           id: id,
           category_id: categoryId,
           name: name,
@@ -36,7 +54,12 @@ export const useTasksStore = defineStore('tasks', () => {
   }
 
   return {
+    tasksByCategory,
+    isCreateModalOpen,
+    completeTask,
+    uncompleteTask,
     toggleIsCreateModalOpen,
     createTask,
+    loadTasks,
   }
 })

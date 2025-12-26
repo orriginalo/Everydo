@@ -1,6 +1,10 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-import { useTasksStore } from '@/stores/useTasksStore'
+import { useTasksStore } from '../stores/useTasksStore'
+import { getTasksByTypes } from '../utils'
+import { storeToRefs } from 'pinia'
+import { watch } from 'vue'
+import TaskCard from './TaskCard.vue'
 
 const props = defineProps({
   category_id: {
@@ -9,49 +13,52 @@ const props = defineProps({
   },
 })
 
-const typeTexts = {
-  daily: 'ежедневно',
-  weekly: 'еженедельно',
-  custom: 'интервал',
-}
-
 const tasksStore = useTasksStore()
 
-onMounted(async () => {
-  await tasksStore.loadTasks(props.category_id)
+const { tasksByCategory } = storeToRefs(tasksStore)
+const { loadTasks } = tasksStore
+
+const tasksByType = computed(() => {
+  const tasks = tasksByCategory.value[props.category_id] ?? []
+  return getTasksByTypes(tasks)
 })
 
-// Только непустые категории
-const tasksByTypeFiltered = computed(() => {
-  const all = tasksStore.tasksByCategory[props.category_id] ?? {
-    daily: [],
-    weekly: [],
-    custom: [],
-  }
-
-  // Оставляем только те, где есть таски
-  const filtered = {}
-  for (const type in all) {
-    if (all[type].length > 0) {
-      filtered[type] = all[type]
-    }
-  }
-  return filtered
-})
+watch(
+  () => props.category_id,
+  (id) => {
+    loadTasks(id)
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
-  <div class="grid grid-cols-2 gap-2 font-unbounded">
+  <div class="flex flex-wrap flex-col gap-2 font-unbounded rounded-xl">
     <div
-      v-for="(tasks, type) in tasksByTypeFiltered"
-      :key="type"
-      class="bg-neutral-800 p-2 rounded-xl"
+      v-if="tasksByType['daily'].length > 0"
+      id="daily"
+      class="bg-neutral-800 p-2 rounded-xl gap-1.5 flex flex-col"
     >
-      <div class="font-bold mb-2">{{ typeTexts[type] }}</div>
+      <span class="font-bold text-xl pl-1">ежедневные</span>
+      <TaskCard v-for="task in tasksByType['daily']" :key="task.id" :task="task" />
+    </div>
 
-      <div v-for="task in tasks" :key="task.id" class="text-sm opacity-80">
-        {{ task.name }}
-      </div>
+    <div
+      v-if="tasksByType['weekly'].length > 0"
+      id="weekly"
+      class="bg-neutral-800 p-2 rounded-xl gap-1.5 flex flex-col"
+    >
+      <span class="font-bold text-xl pl-1 max-h-min">еженедельные</span>
+      <TaskCard v-for="task in tasksByType['weekly']" :key="task.id" :task="task" />
+    </div>
+
+    <div
+      v-if="tasksByType['custom'].length > 0"
+      id="custom"
+      class="bg-neutral-800 p-2 rounded-xl gap-1.5 flex flex-col"
+    >
+      <span class="font-bold text-xl pl-1">интервалы</span>
+      <TaskCard v-for="task in tasksByType['custom']" :key="task.id" :task="task" />
     </div>
   </div>
 </template>

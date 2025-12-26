@@ -3,10 +3,6 @@ import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useCategoriesStore } from '../stores/useCategoriesStore'
 
-const props = defineProps({
-  show: { type: Boolean, required: true },
-})
-
 const emits = defineEmits(['update:show'])
 
 const showTooltip = ref(false)
@@ -15,7 +11,7 @@ const store = useCategoriesStore()
 const name = ref('')
 const exeName = ref('')
 
-function createCategory() {
+function updateCategory() {
   if (name.value === '') {
     return
   }
@@ -23,6 +19,7 @@ function createCategory() {
   store.toggleIsCreateModalOpen()
 }
 </script>
+
 <template>
   <transition name="fade-scale">
     <div v-if="show" class="fixed inset-0 z-20 flex items-center justify-center">
@@ -35,9 +32,9 @@ function createCategory() {
         class="relative bg-neutral-800 rounded-lg border border-neutral-800 p-6 w-105"
       >
         <h1 class="text-2xl font-semibold mb-2 text-white font-unbounded select-none">
-          Создать категорию
+          Изменение категории
         </h1>
-        <p class="text-neutral-400 font-semibold select-none">Введите данные для новой категории</p>
+        <p class="text-neutral-400 font-semibold select-none">Введите данные для категории</p>
 
         <div class="mt-4 gap-2 flex flex-col">
           <input
@@ -83,7 +80,6 @@ function createCategory() {
 
         <div class="mt-6 flex justify-end gap-2">
           <button
-            type="button"
             @click="store.toggleIsCreateModalOpen()"
             class="px-3 py-1.5 rounded-lg text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700 transition"
           >
@@ -91,8 +87,8 @@ function createCategory() {
           </button>
 
           <button
-            type="submit"
             :disabled="name === ''"
+            @click="createCategory()"
             class="bg-neutral-700 px-3 py-1.5 rounded-lg text-neutral-200 transition-all"
             :class="{
               'opacity-50 cursor-not-allowed': name.trim() === '',
