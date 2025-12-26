@@ -24,8 +24,9 @@ const toggleMenu = (e) => {
 }
 
 const editCategory = () => {
-  console.log('Редактировать', props.category)
-  showMenu.value = false
+  showMenu.value = !showMenu.value
+  categoriesStore.setEditCategory(props.category)
+  categoriesStore.toggleIsEditModalOpen()
 }
 </script>
 

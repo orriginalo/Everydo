@@ -10,6 +10,7 @@ import { useTasksStore } from './stores/useTasksStore'
 import CreateTaskModal from './components/CreateTaskModal.vue'
 import { storeToRefs } from 'pinia'
 import ConfirmModal from './components/ConfirmModal.vue'
+import EditCategoryModal from './components/EditCategoryModal.vue'
 
 const categoriesStore = useCategoriesStore()
 const tasksStore = useTasksStore()
@@ -57,6 +58,7 @@ onMounted(async () => {
       ></div>
     </main>
   </div>
+  <EditCategoryModal v-model:show="categoriesStore.isEditCategoryModalOpen" />
   <CreateCatModal v-model:show="isCreateCategoryModalOpen" />
   <CreateTaskModal v-model:show="tasksStore.isCreateModalOpen" />
   <ConfirmModal

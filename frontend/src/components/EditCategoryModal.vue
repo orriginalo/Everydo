@@ -2,6 +2,11 @@
 import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useCategoriesStore } from '../stores/useCategoriesStore'
+import { watch } from 'vue'
+
+const props = defineProps({
+  show: { type: Boolean, required: true },
+})
 
 const emits = defineEmits(['update:show'])
 
@@ -11,12 +16,23 @@ const store = useCategoriesStore()
 const name = ref('')
 const exeName = ref('')
 
+watch(
+  () => store.toEditCategory,
+  (val) => {
+    if (val) {
+      name.value = val.name ?? ''
+      exeName.value = val.exeName ?? ''
+    }
+  },
+  { immediate: true },
+)
+
 function updateCategory() {
   if (name.value === '') {
     return
   }
-  store.createCategory(name.value, exeName.value)
-  store.toggleIsCreateModalOpen()
+  store.updateCategory(store.toEditCategory.id, name.value, exeName.value)
+  store.toggleIsEditModalOpen()
 }
 </script>
 
@@ -28,7 +44,7 @@ function updateCategory() {
 
       <!-- Модалка -->
       <form
-        @submit.prevent="createCategory"
+        @submit.prevent="updateCategory"
         class="relative bg-neutral-800 rounded-lg border border-neutral-800 p-6 w-105"
       >
         <h1 class="text-2xl font-semibold mb-2 text-white font-unbounded select-none">
@@ -80,7 +96,8 @@ function updateCategory() {
 
         <div class="mt-6 flex justify-end gap-2">
           <button
-            @click="store.toggleIsCreateModalOpen()"
+            type="button"
+            @click="store.toggleIsEditModalOpen()"
             class="px-3 py-1.5 rounded-lg text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700 transition"
           >
             Отмена
@@ -88,14 +105,14 @@ function updateCategory() {
 
           <button
             :disabled="name === ''"
-            @click="createCategory()"
+            type="submit"
             class="bg-neutral-700 px-3 py-1.5 rounded-lg text-neutral-200 transition-all"
             :class="{
               'opacity-50 cursor-not-allowed': name.trim() === '',
               'hover:bg-neutral-600 font-bold': name.trim() !== '',
             }"
           >
-            Создать
+            Изменить
           </button>
         </div>
       </form>

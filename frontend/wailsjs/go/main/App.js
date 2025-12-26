@@ -29,3 +29,7 @@ export function GetTasks(arg1) {
 export function UncompleteTask(arg1) {
   return window['go']['main']['App']['UncompleteTask'](arg1);
 }
+
+export function UpdateCategory(arg1, arg2, arg3) {
+  return window['go']['main']['App']['UpdateCategory'](arg1, arg2, arg3);
+}

@@ -10,6 +10,7 @@ type ICategoriesRepository interface {
 	CreateCategory(category *models.Category) error
 	GetCategories() []models.Category
 	DeleteCategory(id int)
+	UpdateCategory(id int, updates map[string]interface{}) error
 }
 
 type CategoriesRepository struct {
@@ -20,6 +21,10 @@ func NewCategoriesRepository(db *gorm.DB) ICategoriesRepository {
 	return &CategoriesRepository{
 		db: db,
 	}
+}
+
+func (r *CategoriesRepository) UpdateCategory(id int, updates map[string]interface{}) error {
+	return r.db.Model(&models.Category{}).Where("id = ?", id).Updates(updates).Error
 }
 
 func (r *CategoriesRepository) CreateCategory(category *models.Category) error {

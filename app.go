@@ -36,6 +36,20 @@ func (a *App) startup(ctx context.Context) {
 
 // Categories
 
+func (a *App) UpdateCategory(id int, name, exeName string) error {
+	updates := map[string]interface{}{
+		"name":     name,
+		"exe_name": exeName,
+	}
+
+	err := a.repo.categoriesRepo.UpdateCategory(id, updates)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (a *App) CreateCategory(name, exeName string) (uint, error) {
 	category := &models.Category{
 		Name:    name,

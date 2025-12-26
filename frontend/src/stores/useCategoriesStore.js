@@ -1,6 +1,12 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { CreateCategory, DeleteCategory, GetCategories, GetTasks } from '../../wailsjs/go/main/App'
+import {
+  CreateCategory,
+  DeleteCategory,
+  GetCategories,
+  GetTasks,
+  UpdateCategory,
+} from '../../wailsjs/go/main/App'
 import { models } from '../../wailsjs/go/models'
 
 export const useCategoriesStore = defineStore('categories', () => {
@@ -8,8 +14,14 @@ export const useCategoriesStore = defineStore('categories', () => {
   const activeCategory = ref(null)
   const isCreateCategoryModalOpen = ref(false)
   const isDeleteModalOpen = ref(false)
+  const isEditCategoryModalOpen = ref(false)
 
   const toDeleteCategory = ref(null)
+  const toEditCategory = ref(null)
+
+  function setEditCategory(category) {
+    toEditCategory.value = category
+  }
 
   async function deleteCategory(category) {
     const tasks = await GetTasks(category.id)
@@ -34,6 +46,17 @@ export const useCategoriesStore = defineStore('categories', () => {
       console.log('Category created')
       loadCategories(id)
     })
+  }
+
+  function updateCategory(id, name, exeName) {
+    UpdateCategory(id, name, exeName).then(() => {
+      console.log('Category updated')
+      loadCategories(id)
+    })
+  }
+
+  function toggleIsEditModalOpen() {
+    isEditCategoryModalOpen.value = !isEditCategoryModalOpen.value
   }
 
   function toggleIsCreateModalOpen() {
@@ -61,11 +84,16 @@ export const useCategoriesStore = defineStore('categories', () => {
     isCreateCategoryModalOpen,
     isDeleteModalOpen,
     toDeleteCategory,
+    isEditCategoryModalOpen,
+    toEditCategory,
     deleteCategory,
-    deleteCategoryForce,
+    updateCategory,
     createCategory,
+    deleteCategoryForce,
     loadCategories,
     setActiveCategory,
     toggleIsCreateModalOpen,
+    toggleIsEditModalOpen,
+    setEditCategory,
   }
 })

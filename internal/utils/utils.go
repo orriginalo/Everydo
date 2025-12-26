@@ -20,7 +20,7 @@ func CalcNextReset(task models.Task, from time.Time) time.Time {
 		return nextWeekly(from, *task.ResetWeekday, task.ResetTime)
 
 	case "custom":
-		return from.AddDate(0, 0, task.ReloadEvery)
+		return nextCustom(from, task.ReloadEvery, task.ResetTime)
 
 	default:
 		panic("unknown reload_type")
@@ -56,6 +56,19 @@ func nextWeekly(from time.Time, weekday int, resetTime string) time.Time {
 		nextDay.Year(), nextDay.Month(), nextDay.Day(),
 		h, m, 0, 0, from.Location(),
 	)
+}
+
+func nextCustom(from time.Time, reloadEvery int, resetTime string) time.Time {
+	h, m := parseHM(resetTime)
+
+	next := time.Date(
+		from.Year(), from.Month(), from.Day(),
+		h, m, 0, 0, from.Location(),
+	)
+
+	next = next.AddDate(0, 0, reloadEvery)
+
+	return next
 }
 
 func parseHM(timeStr string) (int, int) {
