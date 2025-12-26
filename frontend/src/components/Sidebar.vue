@@ -1,9 +1,13 @@
-<script setup lang="ts">
-import { useCategoriesStore } from '@/stores/categories'
+<script setup>
+import { useCategoriesStore } from '@/stores/useCategoriesStore'
 import CategorySideCard from './CategorySideCard.vue'
 import { Icon } from '@iconify/vue'
 
-const store = useCategoriesStore()
+const categoriesStore = useCategoriesStore()
+const tasksStore = useTasksStore()
+
+const { categories, activeCategory, isCreateCategoryModalOpen } = storeToRefs(categoriesStore)
+const { loadCategories, setActiveCategory } = categoriesStore
 </script>
 
 <template>
@@ -19,8 +23,8 @@ const store = useCategoriesStore()
     </div>
 
     <div class="flex flex-col gap-1 px-2">
-      <CategorySideCard v-for="cat in store.categories" :key="cat.id" :cat="cat" />
-      <div v-if="store.categories.length === 0" class="text-neutral-400 px-2 text-center">
+      <CategorySideCard v-for="cat in categories" :key="cat.id" :cat="cat" />
+      <div v-if="categories.length == 0" class="text-neutral-400 px-2 text-center">
         Вы ещё не добавили ни одной игры!
       </div>
     </div>

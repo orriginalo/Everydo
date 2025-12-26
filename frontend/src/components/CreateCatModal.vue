@@ -1,7 +1,7 @@
-<script setup lang="ts">
+<script setup>
 import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useCategoriesStore } from '@/stores/categories'
+import { useCategoriesStore } from '@/stores/useCategoriesStore'
 
 const showTooltip = ref(false)
 const store = useCategoriesStore()

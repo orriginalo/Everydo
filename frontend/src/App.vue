@@ -1,20 +1,23 @@
-<script setup lang="ts">
+<script setup>
 import { onMounted, ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import CreateCatModal from './components/CreateCatModal.vue'
-import { useCategoriesStore } from './stores/categories'
+import { useCategoriesStore } from './stores/useCategoriesStore'
 import CategorySideCard from './components/CategorySideCard.vue'
 import Sidebar from './components/Sidebar.vue'
 import TasksPanelComponent from './components/TasksPanelComponent.vue'
-import { useTasksStore } from './stores/tasks'
+import { useTasksStore } from './stores/useTasksStore'
+import CreateTaskModal from './components/CreateTaskModal.vue'
+import { storeToRefs } from 'pinia'
 
-const activeId = ref<number | null>(1)
-const store = useCategoriesStore()
-
+const categoriesStore = useCategoriesStore()
 const tasksStore = useTasksStore()
 
+const { categories, activeCategory, isCreateCategoryModalOpen } = storeToRefs(categoriesStore)
+const { loadCategories, setActiveCategory } = categoriesStore
+
 onMounted(() => {
-  store.getCategories()
+  categoriesStore.getCategories()
 })
 </script>
 
@@ -24,15 +27,23 @@ onMounted(() => {
 
     <main class="flex-1 p-6 bg-neutral-900">
       <div
-        v-if="store.categories.length > 0"
+        v-if="categories.length > 0"
         class="h-full rounded-lg border border-neutral-800 bg-neutral-850 p-6"
       >
-        <h1 class="text-2xl font-semibold mb-2 font-unbounded">
-          {{ store.activeCat?.name }}
-        </h1>
+        <div class="flex flex-row justify-between">
+          <h1 class="text-2xl font-semibold mb-2 font-unbounded">
+            {{ activeCategory?.name }}
+          </h1>
+          <button
+            @click="tasksStore.toggleIsCreateModalOpen"
+            class="bg-neutral-900 px-1 py-0 rounded-full hover:bg-neutral-800 hover:cursor-pointer"
+          >
+            <Icon icon="ic:baseline-plus" />
+          </button>
+        </div>
 
         <!-- <p class="text-neutral-400">Контент для выбранной категории</p> -->
-        <TasksPanelComponent :tasks="tasksStore.tasksByCategory[store.activeCat.id] ?? []" />
+        <TasksPanelComponent v-if="activeCategory" :category_id="activeCategory.id" />
       </div>
       <div
         v-else
@@ -40,5 +51,6 @@ onMounted(() => {
       ></div>
     </main>
   </div>
-  <CreateCatModal v-if="store.isCreateModalOpen" />
+  <CreateCatModal v-if="isCreateCategoryModalOpen" />
+  <CreateTaskModal v-if="tasksStore.isCreateModalOpen" />
 </template>

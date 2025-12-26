@@ -9,6 +9,7 @@ import (
 type ITasksRepository interface {
 	CreateTask(task *models.Task) error
 	GetTasks(categoryID int) []models.Task
+	GetTasksWithType(categoryID int, reloadType string) []models.Task
 	GetTask(id int) models.Task
 	UpdateTask(id int, updates map[string]interface{})
 	DeleteTask(id int)
@@ -26,6 +27,12 @@ func NewTasksRepository(db *gorm.DB) ITasksRepository {
 
 func (r *TasksRepository) CreateTask(task *models.Task) error {
 	return r.db.Create(task).Error
+}
+
+func (r *TasksRepository) GetTasksWithType(categoryID int, reloadType string) []models.Task {
+	var tasks []models.Task
+	r.db.Model(&models.Task{}).Where("category_id = ? AND reload_type = ?", categoryID, reloadType).Find(&tasks)
+	return tasks
 }
 
 func (r *TasksRepository) GetTasks(categoryID int) []models.Task {
