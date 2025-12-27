@@ -25,7 +25,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex h-screen bg-neutral-900 text-neutral-100 overflow-hidden">
+  <div class="flex h-screen bg-neutral-900 text-neutral-100 overflow-hidden scrollbar">
     <Sidebar />
 
     <main class="flex-1 p-6 bg-neutral-900">

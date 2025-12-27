@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { models } from '../../wailsjs/go/models'
 import { useTasksStore } from '../stores/useTasksStore'
 import { storeToRefs } from 'pinia'
+import { UncompleteTask } from '../../wailsjs/go/main/App'
 
 const props = defineProps({
   task: {
@@ -13,6 +14,10 @@ const props = defineProps({
 
 const now = ref(Date.now())
 let timerId = null
+
+const tasksStore = useTasksStore()
+const { toggleTask } = storeToRefs(tasksStore)
+const { completeTask, uncompleteTask } = tasksStore
 
 onMounted(() => {
   timerId = setInterval(() => {
@@ -47,16 +52,19 @@ function formatRemaining(ms) {
   return `${minutes}м ${seconds}с`
 }
 
-const remainingTime = computed(() => {
-  if (!props.task.is_completed || !props.task.next_reset_at) return null
-
+const ms = computed(() => {
   const resetAt = new Date(props.task.next_reset_at).getTime()
-  return formatRemaining(resetAt - now.value)
+  return resetAt - now.value
 })
 
-const tasksStore = useTasksStore()
-const { toggleTask } = storeToRefs(tasksStore)
-const { completeTask, uncompleteTask } = tasksStore
+const remainingTime = computed(() => {
+  if (!props.task.next_reset_at) return null
+
+  if (ms.value <= 0 && props.task.is_completed) {
+    uncompleteTask(props.task)
+  }
+  return formatRemaining(ms.value)
+})
 </script>
 
 <template>
@@ -101,6 +109,12 @@ const { completeTask, uncompleteTask } = tasksStore
         </span>
       </template>
 
+      <template v-else-if="!task.is_completed && ms <= 8 * 1000 * 60 * 60">
+        Не выполнено
+        <span class="ml-1 text-red-700">
+          {{ remainingTime }}
+        </span>
+      </template>
       <span v-else> Не выполнено </span>
     </div>
   </div>

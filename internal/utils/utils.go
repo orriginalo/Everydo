@@ -7,6 +7,15 @@ import (
 	"time"
 )
 
+func CheckNextResetValid(task models.Task) (time.Time, bool) {
+	now := time.Now()
+	remainingTime := task.NextResetAt.Sub(now)
+	if remainingTime < 0 {
+		return CalcNextReset(task, now), false
+	}
+	return task.NextResetAt, true
+}
+
 func CalcNextReset(task models.Task, from time.Time) time.Time {
 	switch task.ReloadType {
 

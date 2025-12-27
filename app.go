@@ -6,6 +6,7 @@ import (
 	"Everydo/internal/repository"
 	"Everydo/internal/utils"
 	"context"
+	"log/slog"
 	"time"
 )
 
@@ -30,6 +31,16 @@ func (a *App) startup(ctx context.Context) {
 		categoriesRepo: repository.NewCategoriesRepository(db),
 	}
 
+	tasks := repositories.tasksRepo.GetAllTasks()
+	for _, task := range tasks {
+		newTime, valid := utils.CheckNextResetValid(task)
+		if !valid {
+			repositories.tasksRepo.UpdateTask(int(task.ID), map[string]interface{}{
+				"next_reset_at": newTime,
+			})
+		}
+		slog.Info("Все задания проверены")
+	}
 	a.repo = repositories
 	a.ctx = ctx
 }
