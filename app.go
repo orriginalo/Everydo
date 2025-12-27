@@ -8,6 +8,8 @@ import (
 	"context"
 	"log/slog"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type Repositories struct {
@@ -26,8 +28,8 @@ func NewApp() *App {
 
 func (a *App) startup(ctx context.Context) {
 
-	// db := db.InitDB("data.db")
-	db := db.InitDB(utils.GetDataPath())
+	db := db.InitDB("data.db")
+	// db := db.InitDB(utils.GetDataPath())
 	repositories := Repositories{
 		tasksRepo:      repository.NewTasksRepository(db),
 		categoriesRepo: repository.NewCategoriesRepository(db),
@@ -48,6 +50,10 @@ func (a *App) startup(ctx context.Context) {
 }
 
 // Categories
+
+func (a *App) OpenURL(url string) {
+	runtime.BrowserOpenURL(a.ctx, url)
+}
 
 func (a *App) UpdateCategory(id int, name, exeName string) error {
 	updates := map[string]interface{}{

@@ -30,6 +30,10 @@ export function GetTasks(arg1) {
   return window['go']['main']['App']['GetTasks'](arg1);
 }
 
+export function OpenURL(arg1) {
+  return window['go']['main']['App']['OpenURL'](arg1);
+}
+
 export function UncompleteTask(arg1) {
   return window['go']['main']['App']['UncompleteTask'](arg1);
 }
