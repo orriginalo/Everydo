@@ -2,10 +2,39 @@ package utils
 
 import (
 	"Everydo/internal/models"
+	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func GetDataPath() string {
+	dataPath := ""
+
+	switch runtime.GOOS {
+	case "windows":
+		username := os.Getenv("USERNAME")
+		path := "C:/Users/" + username + "/AppData/Local/Everydo"
+		dataPath = path
+	case "linux":
+		data_home := os.Getenv("XDG_DATA_HOME")
+		if data_home == "" {
+			data_home = os.Getenv("HOME") + "/.local/share"
+		}
+		path := data_home + "/Everydo"
+		dataPath = path
+	default:
+		return ""
+	}
+	cleanPath := filepath.FromSlash(strings.ReplaceAll(dataPath, "\\", "/"))
+	os.MkdirAll(cleanPath, os.ModePerm)
+	cleanPath = filepath.Join(cleanPath, "data.db")
+	fmt.Println(cleanPath)
+	return cleanPath
+}
 
 func CheckNextResetValid(task models.Task) (time.Time, bool) {
 	now := time.Now()

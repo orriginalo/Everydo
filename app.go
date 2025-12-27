@@ -25,7 +25,9 @@ func NewApp() *App {
 }
 
 func (a *App) startup(ctx context.Context) {
-	db := db.InitDB("data.db")
+
+	// db := db.InitDB("data.db")
+	db := db.InitDB(utils.GetDataPath())
 	repositories := Repositories{
 		tasksRepo:      repository.NewTasksRepository(db),
 		categoriesRepo: repository.NewCategoriesRepository(db),
@@ -103,6 +105,8 @@ func (a *App) CreateTask(
 		ResetTime:    resetTime,
 		ResetWeekday: resetWeekday,
 	}
+
+	task.NextResetAt = utils.CalcNextReset(task, time.Now())
 
 	err := a.repo.tasksRepo.CreateTask(&task)
 	if err != nil {
