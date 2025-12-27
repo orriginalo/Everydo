@@ -13,18 +13,16 @@ const props = defineProps({
 })
 
 const categoriesStore = useCategoriesStore()
-const { activeCategory } = storeToRefs(categoriesStore)
-const { setActiveCategory, deleteCategory } = categoriesStore
-
-const showMenu = ref(false)
+const { activeCategory, openedMenuCategoryId } = storeToRefs(categoriesStore)
+const { setActiveCategory, deleteCategory, closeCategoryMenu, toggleCategoryMenu } = categoriesStore
 
 const toggleMenu = (e) => {
   e.stopPropagation() // чтобы клик по кнопке не выбирал категорию
-  showMenu.value = !showMenu.value
+  toggleCategoryMenu(props.category.id)
 }
 
 const editCategory = () => {
-  showMenu.value = !showMenu.value
+  closeCategoryMenu()
   categoriesStore.setEditCategory(props.category)
   categoriesStore.toggleIsEditModalOpen()
 }
@@ -57,7 +55,7 @@ const editCategory = () => {
         <Icon
           icon="ic:baseline-more-vert"
           class="transition-all duration-300"
-          :class="!showMenu ? '' : 'rotate-90'"
+          :class="openedMenuCategoryId === props.category.id ? '' : 'rotate-90'"
           width="20"
         />
       </button>
@@ -66,7 +64,7 @@ const editCategory = () => {
     <!-- Выпадающее меню с анимацией -->
     <transition name="fade-scale">
       <div
-        v-if="showMenu"
+        v-if="openedMenuCategoryId === props.category.id"
         class="absolute right-2 top-10 w-36 bg-neutral-900 border border-neutral-700 rounded-xl shadow-xl z-50 overflow-hidden"
       >
         <button
@@ -78,7 +76,7 @@ const editCategory = () => {
         <button
           @click="
             () => {
-              showMenu = false
+              closeCategoryMenu()
               deleteCategory(props.category)
             }
           "

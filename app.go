@@ -135,3 +135,35 @@ func (a *App) UncompleteTask(id int) {
 		"is_completed": false,
 	})
 }
+
+func (a *App) UpdateNextReset(id int) {
+	task := a.repo.tasksRepo.GetTask(id)
+	nextReset := utils.CalcNextReset(task, time.Now())
+	a.repo.tasksRepo.UpdateTask(id, map[string]interface{}{
+		"next_reset_at": nextReset,
+	})
+}
+
+func (a *App) DeleteTask(id int) {
+	a.repo.tasksRepo.DeleteTask(id)
+}
+
+func (a *App) UpdateTask(
+	id int,
+	name string,
+	reloadType string,
+	reloadEvery int,
+	resetTime string,
+	resetWeekday *int,
+) {
+	a.repo.tasksRepo.UpdateTask(id, map[string]interface{}{
+		"name":          name,
+		"reload_type":   reloadType,
+		"reload_every":  reloadEvery,
+		"reset_time":    resetTime,
+		"reset_weekday": resetWeekday,
+	})
+	a.repo.tasksRepo.UpdateTask(id, map[string]interface{}{
+		"next_reset_at": utils.CalcNextReset(a.repo.tasksRepo.GetTask(id), time.Now()),
+	})
+}

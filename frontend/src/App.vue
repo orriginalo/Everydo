@@ -11,6 +11,7 @@ import CreateTaskModal from './components/CreateTaskModal.vue'
 import { storeToRefs } from 'pinia'
 import ConfirmModal from './components/ConfirmModal.vue'
 import EditCategoryModal from './components/EditCategoryModal.vue'
+import EditTaskModal from './components/EditTaskModal.vue'
 
 const categoriesStore = useCategoriesStore()
 const tasksStore = useTasksStore()
@@ -19,6 +20,7 @@ const { categories, activeCategory, isCreateCategoryModalOpen, toDeleteCategory 
   storeToRefs(categoriesStore)
 const { loadCategories, setActiveCategory, deleteCategoryForce } = categoriesStore
 
+const { deleteTaskForce } = tasksStore
 onMounted(async () => {
   await loadCategories()
 })
@@ -58,6 +60,7 @@ onMounted(async () => {
       ></div>
     </main>
   </div>
+  <EditTaskModal v-model:show="tasksStore.isEditModalOpen" />
   <EditCategoryModal v-model:show="categoriesStore.isEditCategoryModalOpen" />
   <CreateCatModal v-model:show="isCreateCategoryModalOpen" />
   <CreateTaskModal v-model:show="tasksStore.isCreateModalOpen" />
@@ -68,6 +71,15 @@ onMounted(async () => {
     confirmText="Удалить"
     cancelText="Отмена"
     @confirm="deleteCategoryForce(categoriesStore.toDeleteCategory)"
+    @cancel="() => {}"
+  />
+  <ConfirmModal
+    v-model:show="tasksStore.isDeleteModalOpen"
+    title="Удалить задание?"
+    description="Вы уверены что хотите удалить это задание? Это действие нельзя будет отменить."
+    confirmText="Удалить"
+    cancelText="Отмена"
+    @confirm="deleteTaskForce(tasksStore.toDeleteTask)"
     @cancel="() => {}"
   />
 </template>

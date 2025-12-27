@@ -18,6 +18,10 @@ export function DeleteCategory(arg1) {
   return window['go']['main']['App']['DeleteCategory'](arg1);
 }
 
+export function DeleteTask(arg1) {
+  return window['go']['main']['App']['DeleteTask'](arg1);
+}
+
 export function GetCategories() {
   return window['go']['main']['App']['GetCategories']();
 }
@@ -32,4 +36,12 @@ export function UncompleteTask(arg1) {
 
 export function UpdateCategory(arg1, arg2, arg3) {
   return window['go']['main']['App']['UpdateCategory'](arg1, arg2, arg3);
+}
+
+export function UpdateNextReset(arg1) {
+  return window['go']['main']['App']['UpdateNextReset'](arg1);
+}
+
+export function UpdateTask(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['main']['App']['UpdateTask'](arg1, arg2, arg3, arg4, arg5, arg6);
 }

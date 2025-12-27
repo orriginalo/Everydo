@@ -3,7 +3,10 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { models } from '../../wailsjs/go/models'
 import { useTasksStore } from '../stores/useTasksStore'
 import { storeToRefs } from 'pinia'
-import { UncompleteTask } from '../../wailsjs/go/main/App'
+import { UncompleteTask, UpdateNextReset } from '../../wailsjs/go/main/App'
+import { Icon } from '@iconify/vue'
+import { useCategoriesStore } from '../stores/useCategoriesStore'
+import { watch } from 'vue'
 
 const props = defineProps({
   task: {
@@ -11,13 +14,6 @@ const props = defineProps({
     required: true,
   },
 })
-
-const now = ref(Date.now())
-let timerId = null
-
-const tasksStore = useTasksStore()
-const { toggleTask } = storeToRefs(tasksStore)
-const { completeTask, uncompleteTask } = tasksStore
 
 onMounted(() => {
   timerId = setInterval(() => {
@@ -28,6 +24,31 @@ onMounted(() => {
 onUnmounted(() => {
   clearInterval(timerId)
 })
+
+const now = ref(Date.now())
+let timerId = null
+
+const timeRemainingConds = {
+  daily: () => ms.value <= 6 * 60 * 60 * 1000,
+  weekly: () => ms.value <= 48 * 60 * 60 * 1000,
+  custom: () => ms.value <= 6 * 60 * 60 * 1000,
+}
+
+const store = useCategoriesStore()
+const tasksStore = useTasksStore()
+const { toggleTask, openedMenuTaskId } = storeToRefs(tasksStore)
+const { completeTask, uncompleteTask, deleteTask, toggleTaskMenu, closeTaskMenu } = tasksStore
+
+const toggleMenu = (e) => {
+  e.stopPropagation()
+  toggleTaskMenu(props.task.id)
+}
+
+const editTask = () => {
+  closeTaskMenu()
+  tasksStore.setEditTask(props.task)
+  tasksStore.toggleIsEditModalOpen()
+}
 
 function formatRemaining(ms) {
   if (ms <= 0) return 'обновляется'
@@ -59,24 +80,34 @@ const ms = computed(() => {
 
 const remainingTime = computed(() => {
   if (!props.task.next_reset_at) return null
-
-  if (ms.value <= 0 && props.task.is_completed) {
-    uncompleteTask(props.task)
-  }
   return formatRemaining(ms.value)
+})
+
+watch(ms, async (newMs, oldMs) => {
+  // Сработает, когда время только что стало <= 0 (перешло с >0 на <=0)
+  if (oldMs > 0 && newMs <= 0) {
+    // Неважно, выполнена задача или нет — обновляем
+    if (props.task.is_completed) {
+      await uncompleteTask(props.task)
+    }
+    // Всегда обновляем next_reset_at, если время вышло
+    await UpdateNextReset(props.task.id)
+    // Перезагружаем задачи
+    tasksStore.loadTasks(store.activeCategory.id)
+  }
 })
 </script>
 
 <template>
   <div
-    class="rounded-xl border px-4 py-3 transition-colors"
+    class="relative rounded-xl border px-4 py-3 transition-colors"
     :class="
       task.is_completed
         ? 'bg-neutral-900 border-emerald-700'
         : 'bg-neutral-800 border-neutral-700 hover:bg-neutral-700'
     "
   >
-    <!-- Верх -->
+    <!-- ВЕРХ: название + кнопка выполнить -->
     <div class="flex items-center justify-between gap-3">
       <h3
         class="text-sm font-medium truncate"
@@ -85,14 +116,11 @@ const remainingTime = computed(() => {
         {{ task.name }}
       </h3>
 
-      <!-- Кнопка toggle -->
       <button
         @click="task.is_completed ? uncompleteTask(task) : completeTask(task)"
-        class="flex h-7 w-7 items-center justify-center rounded-lg border border-neutral-600 text-neutral-300 transition hover:cursor-pointer"
+        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-neutral-600 text-neutral-300 transition"
         :class="
-          task.is_completed
-            ? 'hover:border-neutral-500 hover:text-neutral-200 hover:bg-neutral-700'
-            : 'hover:border-emerald-600 hover:bg-emerald-700 hover:text-emerald-400'
+          task.is_completed ? 'hover:bg-neutral-700' : 'hover:bg-emerald-700 hover:text-emerald-400'
         "
         :title="task.is_completed ? 'Сделать снова невыполненной' : 'Выполнить'"
       >
@@ -100,22 +128,81 @@ const remainingTime = computed(() => {
       </button>
     </div>
 
-    <!-- Низ -->
-    <div class="mt-1 text-xs text-neutral-400">
-      <template v-if="task.is_completed">
-        Сброс через
-        <span class="ml-1 text-neutral-200">
-          {{ remainingTime }}
-        </span>
-      </template>
+    <!-- НИЗ: статус + меню -->
+    <div class="mt-1 flex items-center justify-between text-xs text-neutral-400">
+      <!-- статус -->
+      <div>
+        <template v-if="task.is_completed">
+          Сброс через
+          <span class="ml-1 text-neutral-200">
+            {{ remainingTime }}
+          </span>
+        </template>
 
-      <template v-else-if="!task.is_completed && ms <= 8 * 1000 * 60 * 60">
-        Не выполнено
-        <span class="ml-1 text-red-700">
-          {{ remainingTime }}
-        </span>
-      </template>
-      <span v-else> Не выполнено </span>
+        <template v-else-if="timeRemainingConds[props.task.reload_type]()">
+          Не выполнено
+          <span class="ml-1 text-red-700">
+            {{ remainingTime }}
+          </span>
+        </template>
+
+        <span v-else>Не выполнено</span>
+      </div>
+
+      <!-- меню -->
+      <div class="relative">
+        <button
+          @click="toggleTaskMenu(props.task.id)"
+          class="flex h-7 w-7 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-600 transition"
+        >
+          <Icon
+            icon="ic:baseline-more-vert"
+            width="20"
+            :class="openedMenuTaskId === props.task.id ? 'rotate-90 transition' : 'transition'"
+          />
+        </button>
+
+        <transition name="fade-scale">
+          <div
+            v-if="openedMenuTaskId === props.task.id"
+            class="absolute right-0 top-full mt-1 w-36 bg-neutral-900 border border-neutral-700 rounded-xl shadow-xl z-50 overflow-hidden font-raleway"
+          >
+            <button
+              @click="editTask"
+              class="w-full px-4 py-2 text-left text-sm text-white hover:bg-neutral-800 transition-colors"
+            >
+              Изменить
+            </button>
+            <button
+              @click="
+                () => {
+                  closeTaskMenu()
+                  deleteTask(task)
+                }
+              "
+              class="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-950 transition-colors"
+            >
+              Удалить
+            </button>
+          </div>
+        </transition>
+      </div>
     </div>
   </div>
 </template>
+<style scoped>
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: all 0.15s ease-out;
+}
+.fade-scale-enter-from,
+.fade-scale-leave-to {
+  transform: scale(0.95);
+  opacity: 0;
+}
+.fade-scale-enter-to,
+.fade-scale-leave-from {
+  transform: scale(1);
+  opacity: 1;
+}
+</style>

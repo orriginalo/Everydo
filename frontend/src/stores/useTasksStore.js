@@ -1,11 +1,69 @@
 import { defineStore } from 'pinia'
-import { CompleteTask, CreateTask, GetTasks, UncompleteTask } from '../../wailsjs/go/main/App'
+import {
+  CompleteTask,
+  CreateTask,
+  GetTasks,
+  UncompleteTask,
+  DeleteTask,
+  UpdateTask,
+} from '../../wailsjs/go/main/App'
 import { models } from '../../wailsjs/go/models'
 import { ref } from 'vue'
 
 export const useTasksStore = defineStore('tasks', () => {
   const tasksByCategory = ref({})
   const isCreateModalOpen = ref(false)
+  const isEditModalOpen = ref(false)
+
+  const toEditTask = ref(null)
+
+  const isDeleteModalOpen = ref(false)
+  const toDeleteTask = ref(null)
+
+  const openedMenuTaskId = ref(null)
+
+  function toggleTaskMenu(taskId) {
+    openedMenuTaskId.value = openedMenuTaskId.value === taskId ? null : taskId
+  }
+
+  function closeTaskMenu() {
+    openedMenuTaskId.value = null
+  }
+
+  async function deleteTask(task) {
+    isDeleteModalOpen.value = true
+    toDeleteTask.value = task
+  }
+  function deleteTaskForce(task) {
+    isDeleteModalOpen.value = false
+    toDeleteTask.value = null
+    DeleteTask(task.id).then(() => {
+      loadTasks(task.category_id)
+    })
+  }
+
+  // function updateCategory(id, name, exeName) {
+  //     UpdateCategory(id, name, exeName).then(() => {
+  //       console.log('Category updated')
+  //       loadCategories(id)
+  //     })
+  //   }
+  // like this
+
+  function updateTask(cat_id, id, name, reloadType, reloadEvery, resetTime, resetWeekday) {
+    UpdateTask(id, name, reloadType, reloadEvery, resetTime, resetWeekday).then(() => {
+      console.log('Task updated')
+      loadTasks(cat_id)
+    })
+  }
+
+  function toggleIsEditModalOpen() {
+    isEditModalOpen.value = !isEditModalOpen.value
+  }
+
+  function setEditTask(task) {
+    toEditTask.value = task
+  }
 
   function completeTask(task) {
     CompleteTask(task.id).then(() => {
@@ -56,10 +114,22 @@ export const useTasksStore = defineStore('tasks', () => {
   return {
     tasksByCategory,
     isCreateModalOpen,
+    isDeleteModalOpen,
+    toDeleteTask,
+    isEditModalOpen,
+    toEditTask,
+    openedMenuTaskId,
+    toggleTaskMenu,
+    closeTaskMenu,
     completeTask,
     uncompleteTask,
     toggleIsCreateModalOpen,
     createTask,
     loadTasks,
+    toggleIsEditModalOpen,
+    setEditTask,
+    deleteTask,
+    deleteTaskForce,
+    updateTask,
   }
 })

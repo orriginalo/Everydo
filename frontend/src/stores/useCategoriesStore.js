@@ -19,6 +19,16 @@ export const useCategoriesStore = defineStore('categories', () => {
   const toDeleteCategory = ref(null)
   const toEditCategory = ref(null)
 
+  const openedMenuCategoryId = ref(null)
+
+  function toggleCategoryMenu(categoryId) {
+    openedMenuCategoryId.value = openedMenuCategoryId.value === categoryId ? null : categoryId
+  }
+
+  function closeCategoryMenu() {
+    openedMenuCategoryId.value = null
+  }
+
   function setEditCategory(category) {
     toEditCategory.value = category
   }
@@ -86,6 +96,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     toDeleteCategory,
     isEditCategoryModalOpen,
     toEditCategory,
+    openedMenuCategoryId,
     deleteCategory,
     updateCategory,
     createCategory,
@@ -95,5 +106,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     toggleIsCreateModalOpen,
     toggleIsEditModalOpen,
     setEditCategory,
+    toggleCategoryMenu,
+    closeCategoryMenu,
   }
 })

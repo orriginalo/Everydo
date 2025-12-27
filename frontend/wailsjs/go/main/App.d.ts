@@ -10,6 +10,8 @@ export function CreateTask(arg1:number,arg2:string,arg3:string,arg4:number,arg5:
 
 export function DeleteCategory(arg1:number):Promise<void>;
 
+export function DeleteTask(arg1:number):Promise<void>;
+
 export function GetCategories():Promise<Array<models.Category>>;
 
 export function GetTasks(arg1:number):Promise<Array<models.Task>>;
@@ -17,3 +19,7 @@ export function GetTasks(arg1:number):Promise<Array<models.Task>>;
 export function UncompleteTask(arg1:number):Promise<void>;
 
 export function UpdateCategory(arg1:number,arg2:string,arg3:string):Promise<void>;
+
+export function UpdateNextReset(arg1:number):Promise<void>;
+
+export function UpdateTask(arg1:number,arg2:string,arg3:string,arg4:number,arg5:string,arg6:any):Promise<void>;
