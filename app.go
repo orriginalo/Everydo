@@ -28,8 +28,8 @@ func NewApp() *App {
 
 func (a *App) startup(ctx context.Context) {
 
-	db := db.InitDB("data.db")
-	// db := db.InitDB(utils.GetDataPath())
+	// db := db.InitDB("data.db")
+	db := db.InitDB(utils.GetDataPath())
 	repositories := Repositories{
 		tasksRepo:      repository.NewTasksRepository(db),
 		categoriesRepo: repository.NewCategoriesRepository(db),
