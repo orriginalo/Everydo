@@ -54,7 +54,7 @@ func onReady(ctx context.Context, doCloseApp *bool) func() {
 					slog.Info("Quit.Clicked")
 					*doCloseApp = true
 					// Корректно завершаем приложение
-					wruntime.Quit(*ctx)
+					wruntime.Quit(ctx)
 					return
 				}
 			}
