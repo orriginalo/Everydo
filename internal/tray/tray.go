@@ -3,6 +3,7 @@ package tray
 import (
 	"context"
 	"log"
+	"log/slog"
 	"runtime"
 	"sync"
 
@@ -24,17 +25,17 @@ var (
 )
 
 // SetupTray инициализирует системный трей
-func SetupTray(ctx *context.Context) {
+func SetupTray(ctx context.Context, doCloseApp *bool) {
 	go func() {
 		// Гарантируем однократный запуск трей
 		once.Do(func() {
-			systray.Run(onReady(ctx), onExit)
+			systray.Run(onReady(ctx, doCloseApp), onExit)
 		})
 	}()
 }
 
 // onReady настраивает элементы трея
-func onReady(ctx *context.Context) func() {
+func onReady(ctx context.Context, doCloseApp *bool) func() {
 	return func() {
 		systray.SetIcon(getIcon())
 		systray.SetTitle("Everydo")
@@ -47,8 +48,11 @@ func onReady(ctx *context.Context) func() {
 			for {
 				select {
 				case <-mShow.ClickedCh:
-					wruntime.WindowShow(*ctx)
+					slog.Info("Show.Clicked")
+					wruntime.WindowShow(ctx)
 				case <-mQuit.ClickedCh:
+					slog.Info("Quit.Clicked")
+					*doCloseApp = true
 					// Корректно завершаем приложение
 					wruntime.Quit(*ctx)
 					return

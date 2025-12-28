@@ -6,6 +6,7 @@ import (
 	"context"
 	"embed"
 	"log"
+	"log/slog"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -15,6 +16,10 @@ import (
 
 //go:embed all:frontend/dist
 var assets embed.FS
+
+var (
+	doCloseApp bool = false
+)
 
 func main() {
 	app := NewApp()
@@ -29,7 +34,6 @@ func main() {
 	}
 
 	// Передаем контекст напрямую, без quitChan
-	go tray.SetupTray(&app.ctx)
 
 	err := wails.Run(&options.App{
 		Title:  "Everydo",
@@ -38,10 +42,17 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
+		OnDomReady: func(ctx context.Context) {
+			go tray.SetupTray(ctx, &doCloseApp)
+		},
 		OnStartup: app.startup,
 		OnBeforeClose: func(ctx context.Context) (prevent bool) {
+			slog.Info("OnBeforeClose")
 			runtime.WindowHide(ctx)
-			return true
+			if !doCloseApp {
+				return true
+			}
+			return false
 		},
 		OnShutdown: func(ctx context.Context) {
 			// Явно завершаем трей при закрытии приложения
