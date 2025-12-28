@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"runtime"
+	"sync"
 
 	_ "embed"
 
@@ -17,8 +18,24 @@ var iconData []byte
 //go:embed linux_icon.png
 var linuxIconData []byte
 
-func SetupTray(ctx *context.Context) {
-	systray.Run(func() {
+var (
+	once     sync.Once
+	quitOnce sync.Once
+)
+
+// SetupTray инициализирует системный трей
+func SetupTray(ctx context.Context) {
+	go func() {
+		// Гарантируем однократный запуск трей
+		once.Do(func() {
+			systray.Run(onReady(ctx), onExit)
+		})
+	}()
+}
+
+// onReady настраивает элементы трея
+func onReady(ctx context.Context) func() {
+	return func() {
 		systray.SetIcon(getIcon())
 		systray.SetTitle("Everydo")
 		systray.SetTooltip("Everydo | Menu")
@@ -30,16 +47,26 @@ func SetupTray(ctx *context.Context) {
 			for {
 				select {
 				case <-mShow.ClickedCh:
-					openWindow(*ctx)
+					wruntime.WindowShow(ctx)
 				case <-mQuit.ClickedCh:
-					systray.Quit()
-					wruntime.Quit(*ctx)
+					// Корректно завершаем приложение
+					wruntime.Quit(ctx)
 					return
 				}
 			}
 		}()
-	}, func() {
-		log.Println("Tray exited")
+	}
+}
+
+func onExit() {
+	log.Println("Tray exited")
+}
+
+// Quit принудительно завершает трей
+func Quit() {
+	quitOnce.Do(func() {
+		systray.Quit()
+		log.Println("Tray force quit")
 	})
 }
 
@@ -47,16 +74,9 @@ func getIcon() []byte {
 	switch runtime.GOOS {
 	case "windows":
 		return iconData
-	case "linux":
-		return linuxIconData
-	case "darwin":
+	case "linux", "darwin":
 		return linuxIconData
 	default:
-		return nil
+		return linuxIconData
 	}
-}
-
-func openWindow(ctx context.Context) {
-	wruntime.Show(ctx)
-	wruntime.WindowShow(ctx)
 }

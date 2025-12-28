@@ -1,8 +1,11 @@
 package main
 
 import (
+	singleinstance "Everydo/internal/single_instance"
+	"Everydo/internal/tray"
 	"context"
 	"embed"
+	"log"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -16,6 +19,18 @@ var assets embed.FS
 func main() {
 	app := NewApp()
 
+	ok := singleinstance.CheckSingleInstance(func() {
+		runtime.WindowShow(app.ctx)
+		runtime.Show(app.ctx)
+	})
+
+	if !ok {
+		return
+	}
+
+	// Передаем контекст напрямую, без quitChan
+	go tray.SetupTray(app.ctx)
+
 	err := wails.Run(&options.App{
 		Title:  "Everydo",
 		Width:  1024,
@@ -23,19 +38,20 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		BackgroundColour: &options.RGBA{R: 23, G: 23, B: 23, A: 1},
-		OnStartup:        app.startup,
+		OnStartup: app.startup,
 		OnBeforeClose: func(ctx context.Context) (prevent bool) {
 			runtime.WindowHide(ctx)
-			runtime.Hide(ctx)
 			return true
 		},
-		Bind: []interface{}{
-			app,
+		OnShutdown: func(ctx context.Context) {
+			// Явно завершаем трей при закрытии приложения
+			tray.Quit()
+			log.Println("Application shutdown complete")
 		},
+		Bind: []interface{}{app},
 	})
 
 	if err != nil {
-		println("Error:", err.Error())
+		panic(err)
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"Everydo/internal/db"
 	"Everydo/internal/models"
 	"Everydo/internal/repository"
-	"Everydo/internal/tray"
 	"Everydo/internal/utils"
 	"context"
 	"log/slog"
@@ -30,8 +29,6 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 
 	// db := db.InitDB("data.db")
-	go tray.SetupTray(&ctx)
-
 	db := db.InitDB(utils.GetDataPath())
 	repositories := Repositories{
 		tasksRepo:      repository.NewTasksRepository(db),
