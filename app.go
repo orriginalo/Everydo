@@ -3,6 +3,7 @@ package main
 import (
 	"Everydo/internal/db"
 	"Everydo/internal/models"
+	"Everydo/internal/notifier"
 	"Everydo/internal/repository"
 	"Everydo/internal/utils"
 	"context"
@@ -12,13 +13,8 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-type Repositories struct {
-	tasksRepo      repository.ITasksRepository
-	categoriesRepo repository.ICategoriesRepository
-}
-
 type App struct {
-	repo Repositories
+	repo repository.Repositories
 	ctx  context.Context
 }
 
@@ -30,22 +26,24 @@ func (a *App) startup(ctx context.Context) {
 
 	// db := db.InitDB("data.db")
 	db := db.InitDB(utils.GetDataPath())
-	repositories := Repositories{
-		tasksRepo:      repository.NewTasksRepository(db),
-		categoriesRepo: repository.NewCategoriesRepository(db),
+	repositories := repository.Repositories{
+		TasksRepo:      repository.NewTasksRepository(db),
+		CategoriesRepo: repository.NewCategoriesRepository(db),
 	}
+	notifier := notifier.NewNotifier(&repositories)
+	notifier.Start()
 
-	tasks := repositories.tasksRepo.GetAllTasks()
+	tasks := repositories.TasksRepo.GetAllTasks()
 	for _, task := range tasks {
 		newTime, valid := utils.CheckNextResetValid(task)
 		if !valid {
-			repositories.tasksRepo.UpdateTask(int(task.ID), map[string]interface{}{
+			repositories.TasksRepo.UpdateTask(int(task.ID), map[string]interface{}{
 				"next_reset_at": newTime,
 				"is_completed":  false,
 			})
 		}
-		slog.Info("Все задания проверены")
 	}
+	slog.Info("Все задания проверены")
 	a.repo = repositories
 	a.ctx = ctx
 }
@@ -62,7 +60,7 @@ func (a *App) UpdateCategory(id int, name, exeName string) error {
 		"exe_name": exeName,
 	}
 
-	err := a.repo.categoriesRepo.UpdateCategory(id, updates)
+	err := a.repo.CategoriesRepo.UpdateCategory(id, updates)
 	if err != nil {
 		return err
 	}
@@ -76,7 +74,7 @@ func (a *App) CreateCategory(name, exeName string) (uint, error) {
 		ExeName: exeName,
 	}
 
-	err := a.repo.categoriesRepo.CreateCategory(category)
+	err := a.repo.CategoriesRepo.CreateCategory(category)
 	if err != nil {
 		return 0, err
 	}
@@ -85,12 +83,12 @@ func (a *App) CreateCategory(name, exeName string) (uint, error) {
 }
 
 func (a *App) GetCategories() []models.Category {
-	categories := a.repo.categoriesRepo.GetCategories()
+	categories := a.repo.CategoriesRepo.GetCategories()
 	return categories
 }
 
 func (a *App) DeleteCategory(id int) {
-	a.repo.categoriesRepo.DeleteCategory(id)
+	a.repo.CategoriesRepo.DeleteCategory(id)
 }
 
 // Tasks
@@ -115,7 +113,7 @@ func (a *App) CreateTask(
 
 	task.NextResetAt = utils.CalcNextReset(task, time.Now())
 
-	err := a.repo.tasksRepo.CreateTask(&task)
+	err := a.repo.TasksRepo.CreateTask(&task)
 	if err != nil {
 		return 0, err
 	}
@@ -124,17 +122,17 @@ func (a *App) CreateTask(
 }
 
 func (a *App) GetTasks(categoryID int) []models.Task {
-	tasks := a.repo.tasksRepo.GetTasks(categoryID)
+	tasks := a.repo.TasksRepo.GetTasks(categoryID)
 	return tasks
 }
 
 func (a *App) CompleteTask(id int) {
-	task := a.repo.tasksRepo.GetTask(id)
+	task := a.repo.TasksRepo.GetTask(id)
 
 	now := time.Now()
 	nextReset := utils.CalcNextReset(task, now)
 
-	a.repo.tasksRepo.UpdateTask(id, map[string]interface{}{
+	a.repo.TasksRepo.UpdateTask(id, map[string]interface{}{
 		"is_completed":  true,
 		"last_done_at":  now,
 		"next_reset_at": nextReset,
@@ -142,21 +140,21 @@ func (a *App) CompleteTask(id int) {
 }
 
 func (a *App) UncompleteTask(id int) {
-	a.repo.tasksRepo.UpdateTask(id, map[string]interface{}{
+	a.repo.TasksRepo.UpdateTask(id, map[string]interface{}{
 		"is_completed": false,
 	})
 }
 
 func (a *App) UpdateNextReset(id int) {
-	task := a.repo.tasksRepo.GetTask(id)
+	task := a.repo.TasksRepo.GetTask(id)
 	nextReset := utils.CalcNextReset(task, time.Now())
-	a.repo.tasksRepo.UpdateTask(id, map[string]interface{}{
+	a.repo.TasksRepo.UpdateTask(id, map[string]interface{}{
 		"next_reset_at": nextReset,
 	})
 }
 
 func (a *App) DeleteTask(id int) {
-	a.repo.tasksRepo.DeleteTask(id)
+	a.repo.TasksRepo.DeleteTask(id)
 }
 
 func (a *App) UpdateTask(
@@ -167,14 +165,14 @@ func (a *App) UpdateTask(
 	resetTime string,
 	resetWeekday *int,
 ) {
-	a.repo.tasksRepo.UpdateTask(id, map[string]interface{}{
+	a.repo.TasksRepo.UpdateTask(id, map[string]interface{}{
 		"name":          name,
 		"reload_type":   reloadType,
 		"reload_every":  reloadEvery,
 		"reset_time":    resetTime,
 		"reset_weekday": resetWeekday,
 	})
-	a.repo.tasksRepo.UpdateTask(id, map[string]interface{}{
-		"next_reset_at": utils.CalcNextReset(a.repo.tasksRepo.GetTask(id), time.Now()),
+	a.repo.TasksRepo.UpdateTask(id, map[string]interface{}{
+		"next_reset_at": utils.CalcNextReset(a.repo.TasksRepo.GetTask(id), time.Now()),
 	})
 }
