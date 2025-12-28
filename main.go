@@ -29,7 +29,7 @@ func main() {
 	}
 
 	// Передаем контекст напрямую, без quitChan
-	go tray.SetupTray(app.ctx)
+	go tray.SetupTray(&app.ctx)
 
 	err := wails.Run(&options.App{
 		Title:  "Everydo",

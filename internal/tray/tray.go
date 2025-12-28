@@ -24,7 +24,7 @@ var (
 )
 
 // SetupTray инициализирует системный трей
-func SetupTray(ctx context.Context) {
+func SetupTray(ctx *context.Context) {
 	go func() {
 		// Гарантируем однократный запуск трей
 		once.Do(func() {
@@ -34,7 +34,7 @@ func SetupTray(ctx context.Context) {
 }
 
 // onReady настраивает элементы трея
-func onReady(ctx context.Context) func() {
+func onReady(ctx *context.Context) func() {
 	return func() {
 		systray.SetIcon(getIcon())
 		systray.SetTitle("Everydo")
@@ -47,10 +47,10 @@ func onReady(ctx context.Context) func() {
 			for {
 				select {
 				case <-mShow.ClickedCh:
-					wruntime.WindowShow(ctx)
+					wruntime.WindowShow(*ctx)
 				case <-mQuit.ClickedCh:
 					// Корректно завершаем приложение
-					wruntime.Quit(ctx)
+					wruntime.Quit(*ctx)
 					return
 				}
 			}
