@@ -1,3 +1,5 @@
+//go:build !darwin
+
 package tray
 
 import (
@@ -66,7 +68,6 @@ func onExit() {
 	log.Println("Tray exited")
 }
 
-// Quit принудительно завершает трей
 func Quit() {
 	quitOnce.Do(func() {
 		systray.Quit()
