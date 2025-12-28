@@ -41,6 +41,7 @@ func (a *App) startup(ctx context.Context) {
 		if !valid {
 			repositories.tasksRepo.UpdateTask(int(task.ID), map[string]interface{}{
 				"next_reset_at": newTime,
+				"is_completed":  false,
 			})
 		}
 		slog.Info("Все задания проверены")

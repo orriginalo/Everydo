@@ -62,7 +62,10 @@ function openUrl(url) {
     </div>
 
     <!-- Footer -->
-    <div v-if="isOpen" class="text-xs text-neutral-500 px-4 py-3 border-t border-neutral-800">
+    <div
+      v-if="isOpen"
+      class="text-xs text-neutral-500 px-4 py-3 border-t border-neutral-800 font-unbounded"
+    >
       by
       <button
         class="underline hover:cursor-pointer hover:text-neutral-400 transition-all"
