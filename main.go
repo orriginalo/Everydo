@@ -47,7 +47,7 @@ func main() {
 			Assets: assets,
 		},
 		OnDomReady: func(ctx context.Context) {
-			if runtime.GOOS == "darwin" {
+			if runtime.GOOS != "darwin" {
 				go tray.SetupTray(ctx, &doCloseApp)
 			}
 		},

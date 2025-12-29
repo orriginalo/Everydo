@@ -2,12 +2,16 @@ package main
 
 import (
 	"Everydo/internal/db"
+	"Everydo/internal/errs"
 	"Everydo/internal/models"
-	"Everydo/internal/notifier"
 	"Everydo/internal/repository"
+	"Everydo/internal/services"
 	"Everydo/internal/utils"
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -16,10 +20,14 @@ import (
 type App struct {
 	repo repository.Repositories
 	ctx  context.Context
+
+	activeCategoriesTimes map[string]int
 }
 
 func NewApp() *App {
-	return &App{}
+	return &App{
+		activeCategoriesTimes: make(map[string]int),
+	}
 }
 
 func (a *App) startup(ctx context.Context) {
@@ -30,8 +38,18 @@ func (a *App) startup(ctx context.Context) {
 		TasksRepo:      repository.NewTasksRepository(db),
 		CategoriesRepo: repository.NewCategoriesRepository(db),
 	}
-	notifier := notifier.NewNotifier(&repositories)
-	notifier.Start()
+	notifier := services.NewNotifier(&repositories)
+	activeGameChecker := services.NewGameChecker(&repositories)
+
+	ticker := services.NewTicker(
+		notifier, time.Second,
+		func() {
+			tickerFunc(
+				a, activeGameChecker,
+				nil, func(c *models.Category) {},
+			)
+		})
+	ticker.Start()
 
 	tasks := repositories.TasksRepo.GetAllTasks()
 	for _, task := range tasks {
@@ -46,6 +64,48 @@ func (a *App) startup(ctx context.Context) {
 	slog.Info("Все задания проверены")
 	a.repo = repositories
 	a.ctx = ctx
+}
+
+func tickerFunc(
+	app *App, activeGameChecker *services.GameChecker,
+	onEnterCategory func(*models.Category),
+	onExitCategory func(*models.Category),
+) {
+	slog.Info("Tick --------------------")
+	fmt.Println(app.activeCategoriesTimes)
+
+	activeCategories, err := activeGameChecker.GetActiveCategories()
+	if err != nil {
+		if errors.Is(err, errs.ErrNoActiveCategory) {
+			for k := range app.activeCategoriesTimes {
+				delete(app.activeCategoriesTimes, k)
+			}
+		} else {
+			slog.Error(err.Error())
+		}
+		return
+	}
+
+	activeCategoriesExeNames := []string{}
+
+	for _, c := range activeCategories {
+		activeCategoriesExeNames = append(activeCategoriesExeNames, c.ExeName)
+		if _, ok := app.activeCategoriesTimes[c.ExeName]; !ok {
+			app.activeCategoriesTimes[c.ExeName] = 0
+			onEnterCategory(&c)
+		}
+		app.activeCategoriesTimes[c.ExeName]++
+	}
+
+	for k := range app.activeCategoriesTimes {
+		if !slices.Contains(activeCategoriesExeNames, k) {
+			delete(app.activeCategoriesTimes, k)
+
+			category := app.repo.CategoriesRepo.GetCategoryByExeName(k)
+			onExitCategory(category)
+		}
+	}
+
 }
 
 // Categories

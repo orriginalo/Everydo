@@ -9,6 +9,7 @@ import (
 type ICategoriesRepository interface {
 	CreateCategory(category *models.Category) error
 	GetCategories() []models.Category
+	GetCategoryByExeName(exeName string) *models.Category
 	DeleteCategory(id int)
 	UpdateCategory(id int, updates map[string]interface{}) error
 }
@@ -21,6 +22,12 @@ func NewCategoriesRepository(db *gorm.DB) ICategoriesRepository {
 	return &CategoriesRepository{
 		db: db,
 	}
+}
+
+func (r *CategoriesRepository) GetCategoryByExeName(exeName string) *models.Category {
+	var category models.Category
+	r.db.First(&category, "exe_name = ?", exeName)
+	return &category
 }
 
 func (r *CategoriesRepository) UpdateCategory(id int, updates map[string]interface{}) error {

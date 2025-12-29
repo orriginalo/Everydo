@@ -21,7 +21,8 @@ type Task struct {
 }
 
 type Category struct {
-	ID      uint   `json:"id"`
-	Name    string `json:"name"`
-	ExeName string `json:"exe_name"`
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	ExeName  string `json:"exe_name"`
+	IsActive bool   `json:"is_active" gorm:"default:true"`
 }

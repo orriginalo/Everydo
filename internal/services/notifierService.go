@@ -1,4 +1,4 @@
-package notifier
+package services
 
 import (
 	"Everydo/internal/models"
@@ -6,10 +6,8 @@ import (
 	_ "embed"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/gen2brain/beeep"
-	"github.com/mitchellh/go-ps"
 )
 
 //go:embed ..\..\build\appicon.png
@@ -18,54 +16,13 @@ var iconData []byte
 type Notifier struct {
 	repo                  *repository.Repositories
 	activeCategoryProcess *string
+	// activeCategorySeconds int
 }
 
 func NewNotifier(repo *repository.Repositories) *Notifier {
 	return &Notifier{
 		repo:                  repo,
 		activeCategoryProcess: nil,
-	}
-}
-
-func (n *Notifier) Start() {
-	ticker := time.NewTicker(5 * time.Second)
-	slog.Info("Ticker started")
-	go func() {
-		for range ticker.C {
-			n.Check()
-		}
-	}()
-}
-
-func (n *Notifier) Stop() {
-
-}
-
-func (n *Notifier) Check() {
-	processes, err := ps.Processes()
-	if err != nil {
-		panic(err)
-	}
-
-	categories := n.repo.CategoriesRepo.GetCategories()
-
-	isProcessActive := false
-	for _, c := range categories {
-		for _, p := range processes {
-			if p.Executable() == c.ExeName {
-				isProcessActive = true
-				if n.activeCategoryProcess != nil && *n.activeCategoryProcess == c.ExeName {
-					continue
-				}
-
-				n.activeCategoryProcess = &c.ExeName
-				n.Notify(c)
-				return
-			}
-		}
-	}
-	if n.activeCategoryProcess != nil && !isProcessActive {
-		n.activeCategoryProcess = nil
 	}
 }
 

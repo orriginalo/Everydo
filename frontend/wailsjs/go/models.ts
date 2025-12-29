@@ -4,6 +4,7 @@ export namespace models {
 	    id: number;
 	    name: string;
 	    exe_name: string;
+	    is_active: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Category(source);
@@ -14,6 +15,7 @@ export namespace models {
 	        this.id = source["id"];
 	        this.name = source["name"];
 	        this.exe_name = source["exe_name"];
+	        this.is_active = source["is_active"];
 	    }
 	}
 	export class Task {
