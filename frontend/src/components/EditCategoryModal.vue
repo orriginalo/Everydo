@@ -21,7 +21,7 @@ watch(
   (val) => {
     if (val) {
       name.value = val.name ?? ''
-      exeName.value = val.exeName ?? ''
+      exeName.value = val.exe_name ?? ''
     }
   },
   { immediate: true },
