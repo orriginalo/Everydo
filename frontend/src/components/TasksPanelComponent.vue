@@ -33,32 +33,44 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-wrap flex-col gap-2 font-unbounded rounded-xl">
+  <div
+    class="grid gap-2 h-full font-unbounded rounded-xl"
+    style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr))"
+  >
+    <!-- DAILY -->
     <div
       v-if="tasksByType['daily'].length > 0"
-      id="daily"
-      class="bg-neutral-800 p-2 rounded-xl gap-1.5 flex flex-col"
+      class="bg-neutral-800 p-2 rounded-xl flex flex-col min-h-0"
     >
-      <span class="font-bold text-xl pl-1">ежедневные</span>
-      <TaskCard v-for="task in tasksByType['daily']" :key="task.id" :task="task" />
+      <span class="font-bold text-xl pl-1 shrink-0">ежедневные</span>
+
+      <div class="flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0">
+        <TaskCard v-for="task in tasksByType['daily']" :key="task.id" :task="task" />
+      </div>
     </div>
 
+    <!-- WEEKLY -->
     <div
       v-if="tasksByType['weekly'].length > 0"
-      id="weekly"
-      class="bg-neutral-800 p-2 rounded-xl gap-1.5 flex flex-col"
+      class="bg-neutral-800 p-2 rounded-xl flex flex-col min-h-0"
     >
-      <span class="font-bold text-xl pl-1 max-h-min">еженедельные</span>
-      <TaskCard v-for="task in tasksByType['weekly']" :key="task.id" :task="task" />
+      <span class="font-bold text-xl pl-1 shrink-0">еженедельные</span>
+
+      <div class="flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0">
+        <TaskCard v-for="task in tasksByType['weekly']" :key="task.id" :task="task" />
+      </div>
     </div>
 
+    <!-- CUSTOM -->
     <div
       v-if="tasksByType['custom'].length > 0"
-      id="custom"
-      class="bg-neutral-800 p-2 rounded-xl gap-1.5 flex flex-col"
+      class="bg-neutral-800 p-2 rounded-xl flex flex-col min-h-0"
     >
-      <span class="font-bold text-xl pl-1">интервалы</span>
-      <TaskCard v-for="task in tasksByType['custom']" :key="task.id" :task="task" />
+      <span class="font-bold text-xl pl-1 shrink-0">интервалы</span>
+
+      <div class="flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0">
+        <TaskCard v-for="task in tasksByType['custom']" :key="task.id" :task="task" />
+      </div>
     </div>
   </div>
 </template>

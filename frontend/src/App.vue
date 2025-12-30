@@ -36,9 +36,10 @@ onMounted(async () => {
         class="flex flex-col h-full rounded-lg border border-neutral-800 bg-neutral-850 p-6"
       >
         <div class="flex flex-row justify-between mb-2">
-          <h1 class="text-2xl font-semibold mb-2 font-unbounded">
+          <div class="text-2xl font-semibold mb-2 font-unbounded">
             {{ activeCategory?.name }}
-          </h1>
+            <!-- <span class="text-neutral-500 text-sm">{{ activeCategory?.exe_name }}</span> -->
+          </div>
           <button
             @click="tasksStore.toggleIsCreateModalOpen"
             class="flex flex-row items-center gap-2 font-unbounded bg-neutral-800 px-2 rounded-full hover:bg-neutral-700 hover:cursor-pointer"
@@ -47,12 +48,9 @@ onMounted(async () => {
           </button>
         </div>
 
-        <!-- <p class="text-neutral-400">Контент для выбранной категории</p> -->
-        <TasksPanelComponent
-          v-if="activeCategory"
-          :category_id="activeCategory.id"
-          class="flex-1 overflow-y-auto"
-        />
+        <div class="flex-1 min-h-0">
+          <TasksPanelComponent v-if="activeCategory" :category_id="activeCategory.id" />
+        </div>
       </div>
       <div
         v-else

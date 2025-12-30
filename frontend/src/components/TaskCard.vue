@@ -110,7 +110,7 @@ watch(ms, async (newMs, oldMs) => {
     <!-- ВЕРХ: название + кнопка выполнить -->
     <div class="flex items-center justify-between gap-3">
       <h3
-        class="text-sm font-medium truncate"
+        class="text-wrap text-sm font-medium truncate"
         :class="task.is_completed ? 'text-emerald-300' : 'text-neutral-100'"
       >
         {{ task.name }}
@@ -131,7 +131,7 @@ watch(ms, async (newMs, oldMs) => {
     <!-- НИЗ: статус + меню -->
     <div class="mt-1 flex items-center justify-between text-xs text-neutral-400">
       <!-- статус -->
-      <div>
+      <div class="whitespace-nowrap">
         <template v-if="task.is_completed">
           Сброс через
           <span class="ml-1 text-neutral-200">

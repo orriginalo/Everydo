@@ -5,6 +5,7 @@ import (
 	"Everydo/internal/tray"
 	"context"
 	"embed"
+	"flag"
 	"log"
 	"log/slog"
 	"runtime"
@@ -21,28 +22,44 @@ var assets embed.FS
 
 var (
 	doCloseApp bool = false
+	screen          = flag.String("screen", "main", "screen name")
 )
 
 func main() {
 	beeep.AppName = "Everydo"
+	flag.Parse()
 
 	app := NewApp()
 
-	ok := singleinstance.CheckSingleInstance(func() {
-		wruntime.WindowShow(app.ctx)
-		wruntime.Show(app.ctx)
-	})
-
-	if !ok {
-		return
+	switch *screen {
+	case "main":
+		ok := singleinstance.CheckSingleInstance(func() {
+			wruntime.WindowShow(app.ctx)
+			wruntime.Show(app.ctx)
+		})
+		if !ok {
+			return
+		}
+		runMainApp(app)
+	case "stats":
+		runStatisticsApp(app)
+	default:
+		panic("unknown screen")
 	}
 
-	// Передаем контекст напрямую, без quitChan
+}
 
+func runMainApp(app *App) {
 	err := wails.Run(&options.App{
 		Title:  "Everydo",
 		Width:  1024,
 		Height: 768,
+		// SingleInstanceLock: &options.SingleInstanceLock{
+		// 	OnSecondInstanceLaunch: func(secondInstanceData options.SecondInstanceData) {
+		// 		wruntime.WindowShow(app.ctx)
+		// 		wruntime.Show(app.ctx)
+		// 	},
+		// },
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
@@ -58,8 +75,7 @@ func main() {
 			return !doCloseApp
 		},
 		OnShutdown: func(ctx context.Context) {
-			// Явно завершаем трей при закрытии приложения
-			if runtime.GOOS == "darwin" {
+			if runtime.GOOS != "darwin" {
 				tray.Quit()
 			}
 			log.Println("Application shutdown complete")
@@ -67,6 +83,25 @@ func main() {
 		Bind: []interface{}{app},
 	})
 
+	if err != nil {
+		panic(err)
+	}
+}
+
+func runStatisticsApp(app *App) {
+	err := wails.Run(&options.App{
+		Title:  "Everydo | Statistics",
+		Width:  400,
+		Height: 800,
+		AssetServer: &assetserver.Options{
+			Assets: assets,
+		},
+		OnStartup:     app.startup,
+		Bind:          []interface{}{app},
+		DisableResize: true,
+		Frameless:     true,
+		AlwaysOnTop:   true,
+	})
 	if err != nil {
 		panic(err)
 	}

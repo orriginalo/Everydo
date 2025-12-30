@@ -31,6 +31,7 @@ func NewApp() *App {
 }
 
 func (a *App) startup(ctx context.Context) {
+	a.ctx = ctx
 
 	db := db.InitDB("data.db")
 	// db := db.InitDB(utils.GetDataPath())
@@ -63,7 +64,6 @@ func (a *App) startup(ctx context.Context) {
 	}
 	slog.Info("Все задания проверены")
 	a.repo = repositories
-	a.ctx = ctx
 }
 
 func tickerFunc(
