@@ -33,8 +33,11 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
-	db := db.InitDB("data.db")
-	// db := db.InitDB(utils.GetDataPath())
+	dbPath := "data.db"
+	if runtime.Environment(ctx).BuildType != "dev" {
+		dbPath = utils.GetDataPath()
+	}
+	db := db.InitDB(dbPath)
 	repositories := repository.Repositories{
 		TasksRepo:      repository.NewTasksRepository(db),
 		CategoriesRepo: repository.NewCategoriesRepository(db),
