@@ -50,7 +50,7 @@ func (a *App) startup(ctx context.Context) {
 		func() {
 			tickerFunc(
 				a, activeGameChecker,
-				nil, func(c *models.Category) {},
+				func(c *models.Category) {}, func(c *models.Category) {},
 			)
 		})
 	ticker.Start()
