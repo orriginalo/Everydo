@@ -23,6 +23,8 @@ export namespace models {
 	    name: string;
 	    category_id: number;
 	    is_completed: boolean;
+	    // Go type: time
+	    completed_at?: any;
 	    reload_type: string;
 	    reload_every: number;
 	    reset_time: string;
@@ -44,6 +46,7 @@ export namespace models {
 	        this.name = source["name"];
 	        this.category_id = source["category_id"];
 	        this.is_completed = source["is_completed"];
+	        this.completed_at = this.convertValues(source["completed_at"], null);
 	        this.reload_type = source["reload_type"];
 	        this.reload_every = source["reload_every"];
 	        this.reset_time = source["reset_time"];

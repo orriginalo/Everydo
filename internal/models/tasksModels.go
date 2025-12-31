@@ -7,7 +7,9 @@ type Task struct {
 	Name       string `json:"name"`
 	CategoryID uint   `json:"category_id"`
 
-	IsCompleted bool   `json:"is_completed"`
+	IsCompleted bool       `json:"is_completed"`
+	CompletedAt *time.Time `json:"completed_at"`
+
 	ReloadType  string `json:"reload_type"`  // daily | weekly | custom
 	ReloadEvery int    `json:"reload_every"` // для custom (в днях)
 
