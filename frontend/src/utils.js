@@ -18,3 +18,9 @@ export function getTasksByTypes(tasks) {
 
   return result
 }
+
+export const timeRemainingMS = {
+  daily: 6 * 60 * 60 * 1000,
+  weekly: 48 * 60 * 60 * 1000,
+  custom: 6 * 60 * 60 * 1000,
+}

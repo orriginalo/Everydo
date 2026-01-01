@@ -1,9 +1,12 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useCategoriesStore } from '../stores/useCategoriesStore'
+import { useTasksStore } from '../stores/useTasksStore'
 import { storeToRefs } from 'pinia'
 import { models } from '../../wailsjs/go/models'
 import { Icon } from '@iconify/vue'
+import { timeRemainingMS } from '../utils'
+import { onMounted } from 'vue'
 
 const props = defineProps({
   category: {
@@ -12,6 +15,15 @@ const props = defineProps({
   },
 })
 
+onMounted(() => {
+  timerId = setInterval(() => {
+    now.value = Date.now()
+  }, 1000)
+})
+let timerId = null
+const now = ref(Date.now())
+
+const tasksStore = useTasksStore()
 const categoriesStore = useCategoriesStore()
 const { activeCategory, openedMenuCategoryId } = storeToRefs(categoriesStore)
 const { setActiveCategory, deleteCategory, closeCategoryMenu, toggleCategoryMenu } = categoriesStore
@@ -26,6 +38,29 @@ const editCategory = () => {
   categoriesStore.setEditCategory(props.category)
   categoriesStore.toggleIsEditModalOpen()
 }
+
+const categoryTasks = computed(() => {
+  return tasksStore.tasksByCategory[props.category.id] ?? []
+})
+
+const indicatorStatusColor = computed(() => {
+  const redTasks = categoryTasks.value.filter((task) => {
+    const resetAt = new Date(task.next_reset_at).getTime()
+    const expireAt = resetAt - now.value
+
+    return expireAt < timeRemainingMS[task.reload_type] && !task.is_completed
+  })
+  const uncompletedTasks = categoryTasks.value.filter((task) => !task.is_completed)
+
+  if (uncompletedTasks.length === 0 && redTasks.length === 0) {
+    return ''
+  }
+  if (redTasks.length > 0) {
+    return 'bg-red-700'
+  } else if (uncompletedTasks.length > 0) {
+    return 'bg-yellow-700'
+  }
+})
 </script>
 
 <template>
@@ -43,6 +78,10 @@ const editCategory = () => {
         <div
           class="h-8 w-8 rounded bg-neutral-700 flex items-center justify-center text-sm font-bold"
         >
+          <div
+            class="absolute rounded-full h-2 w-2 left-2.5 top-1.5 transition-colors"
+            :class="indicatorStatusColor"
+          ></div>
           {{ props.category.name[0] }}
         </div>
 

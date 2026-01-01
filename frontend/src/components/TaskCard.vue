@@ -7,6 +7,7 @@ import { UncompleteTask, UpdateNextReset } from '../../wailsjs/go/main/App'
 import { Icon } from '@iconify/vue'
 import { useCategoriesStore } from '../stores/useCategoriesStore'
 import { watch } from 'vue'
+import { timeRemainingMS } from '../utils'
 
 const props = defineProps({
   task: {
@@ -27,12 +28,6 @@ onUnmounted(() => {
 
 const now = ref(Date.now())
 let timerId = null
-
-const timeRemainingConds = {
-  daily: () => ms.value <= 6 * 60 * 60 * 1000,
-  weekly: () => ms.value <= 48 * 60 * 60 * 1000,
-  custom: () => ms.value <= 6 * 60 * 60 * 1000,
-}
 
 const store = useCategoriesStore()
 const tasksStore = useTasksStore()
@@ -147,7 +142,7 @@ watch(ms, async (newMs, oldMs) => {
             </span>
           </template>
 
-          <template v-else-if="timeRemainingConds[props.task.reload_type]()">
+          <template v-else-if="ms < timeRemainingMS[props.task.reload_type]">
             Не выполнено
             <span class="ml-1 text-red-700">
               {{ remainingTime }}
