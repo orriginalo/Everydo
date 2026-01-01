@@ -5,6 +5,8 @@ import { getTasksByTypes } from '../utils'
 import { storeToRefs } from 'pinia'
 import { watch } from 'vue'
 import TaskCard from './TaskCard.vue'
+import draggable from 'vuedraggable'
+import { ref } from 'vue'
 
 const props = defineProps({
   category_id: {
@@ -23,6 +25,8 @@ const tasksByType = computed(() => {
   return getTasksByTypes(tasks)
 })
 
+const drag = ref(false)
+
 watch(
   () => props.category_id,
   (id) => {
@@ -30,6 +34,18 @@ watch(
   },
   { immediate: true },
 )
+const dailyTasks = computed({
+  get: () => tasksByType.value.daily,
+  set: (val) => tasksStore.reorderTasks(props.category_id, 'daily', val),
+})
+const weeklyTasks = computed({
+  get: () => tasksByType.value.weekly,
+  set: (val) => tasksStore.reorderTasks(props.category_id, 'weekly', val),
+})
+const customTasks = computed({
+  get: () => tasksByType.value.custom,
+  set: (val) => tasksStore.reorderTasks(props.category_id, 'custom', val),
+})
 </script>
 
 <template>
@@ -45,9 +61,24 @@ watch(
       <!-- TODO: добавить mb-1.5 -->
       <span class="font-bold text-xl pl-1 shrink-0 mb-1.5">ежедневные</span>
 
-      <div class="flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0">
+      <!-- <div class="flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0">
         <TaskCard v-for="task in tasksByType['daily']" :key="task.id" :task="task" />
-      </div>
+      </div> -->
+      <draggable
+        v-model="dailyTasks"
+        item-key="id"
+        animation="300"
+        @start="drag = true"
+        @end="drag = false"
+        handle=".drag-handle"
+        ghost-class="opacity-40"
+        force-fallback="true"
+        class="flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0"
+      >
+        <template #item="{ element }">
+          <TaskCard :task="element" />
+        </template>
+      </draggable>
     </div>
 
     <!-- WEEKLY -->
@@ -57,9 +88,21 @@ watch(
     >
       <span class="font-bold text-xl pl-1 shrink-0 mb-2">еженедельные</span>
 
-      <div class="flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0">
-        <TaskCard v-for="task in tasksByType['weekly']" :key="task.id" :task="task" />
-      </div>
+      <draggable
+        v-model="weeklyTasks"
+        item-key="id"
+        animation="300"
+        @start="drag = true"
+        @end="drag = false"
+        handle=".drag-handle"
+        ghost-class="opacity-40"
+        force-fallback="true"
+        class="flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0"
+      >
+        <template #item="{ element }">
+          <TaskCard :task="element" />
+        </template>
+      </draggable>
     </div>
 
     <!-- CUSTOM -->
@@ -69,9 +112,21 @@ watch(
     >
       <span class="font-bold text-xl pl-1 shrink-0">интервалы</span>
 
-      <div class="flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0">
-        <TaskCard v-for="task in tasksByType['custom']" :key="task.id" :task="task" />
-      </div>
+      <draggable
+        v-model="customTasks"
+        item-key="id"
+        animation="300"
+        @start="drag = true"
+        @end="drag = false"
+        handle=".drag-handle"
+        ghost-class="opacity-40"
+        force-fallback="true"
+        class="flex-1 overflow-y-auto flex flex-col gap-1.5 min-h-0"
+      >
+        <template #item="{ element }">
+          <TaskCard :task="element" />
+        </template>
+      </draggable>
     </div>
   </div>
 </template>

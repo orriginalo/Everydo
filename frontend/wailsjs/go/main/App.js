@@ -49,3 +49,7 @@ export function UpdateNextReset(arg1) {
 export function UpdateTask(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['UpdateTask'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
+
+export function UpdateTasksOrder(arg1) {
+  return window['go']['main']['App']['UpdateTasksOrder'](arg1);
+}

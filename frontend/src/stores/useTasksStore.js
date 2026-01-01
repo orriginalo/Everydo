@@ -9,6 +9,7 @@ import {
 } from '../../wailsjs/go/main/App'
 import { models } from '../../wailsjs/go/models'
 import { ref } from 'vue'
+import { UpdateTasksOrder } from '../../wailsjs/go/main/App'
 
 export const useTasksStore = defineStore('tasks', () => {
   const tasksByCategory = ref({})
@@ -82,13 +83,38 @@ export const useTasksStore = defineStore('tasks', () => {
   function loadTasks(categoryId) {
     GetTasks(categoryId)
       .then((tasks) => {
-        console.log('tasks loaded')
-        console.log(tasks)
+        tasks.sort((a, b) => a.order - b.order)
         tasksByCategory.value[categoryId] = tasks
       })
       .catch((err) => {
-        console.log(err)
+        console.error(err)
       })
+  }
+
+  function reorderTasks(categoryId, reloadType, newOrder) {
+    const tasks = tasksByCategory.value[categoryId]
+    if (!tasks) return
+
+    let order = 0
+
+    // обновляем order только для нужного типа
+    for (const task of newOrder) {
+      const t = tasks.find((x) => x.id === task.id && x.reload_type === reloadType)
+      if (t) {
+        t.order = order++
+      }
+    }
+
+    // пересортировать глобальный массив
+    tasks.sort((a, b) => a.order - b.order)
+
+    // ⬇️ СОХРАНЯЕМ В БЭК
+    UpdateTasksOrder(
+      newOrder.map((t, i) => ({
+        id: t.id,
+        order: i,
+      })),
+    )
   }
 
   function toggleIsCreateModalOpen() {
@@ -119,6 +145,7 @@ export const useTasksStore = defineStore('tasks', () => {
     isEditModalOpen,
     toEditTask,
     openedMenuTaskId,
+    reorderTasks,
     toggleTaskMenu,
     closeTaskMenu,
     completeTask,

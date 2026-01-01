@@ -14,6 +14,7 @@ type ITasksRepository interface {
 	GetTask(id int) models.Task
 	UpdateTask(id int, updates map[string]interface{})
 	DeleteTask(id int)
+	GetMaxOrder() int
 }
 
 type TasksRepository struct {
@@ -33,6 +34,7 @@ func (r *TasksRepository) GetAllTasks() []models.Task {
 }
 
 func (r *TasksRepository) CreateTask(task *models.Task) error {
+	task.Order = r.GetMaxOrder() + 1
 	return r.db.Create(task).Error
 }
 
@@ -44,7 +46,7 @@ func (r *TasksRepository) GetTasksWithType(categoryID int, reloadType string) []
 
 func (r *TasksRepository) GetTasks(categoryID int) []models.Task {
 	var tasks []models.Task
-	r.db.Model(&models.Task{}).Where("category_id = ?", categoryID).Find(&tasks)
+	r.db.Model(&models.Task{}).Where("category_id = ?", categoryID).Find(&tasks).Order("order ASC")
 	return tasks
 }
 
@@ -60,4 +62,15 @@ func (r *TasksRepository) UpdateTask(id int, updates map[string]interface{}) {
 
 func (r *TasksRepository) DeleteTask(id int) {
 	r.db.Delete(&models.Task{}, id)
+}
+
+func (r *TasksRepository) GetMaxOrder() int {
+	var maxOrder int
+
+	r.db.
+		Model(&models.Task{}).
+		Select("COALESCE(MAX(`order`), 0)").
+		Scan(&maxOrder)
+
+	return maxOrder
 }

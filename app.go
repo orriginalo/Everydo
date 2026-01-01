@@ -9,7 +9,6 @@ import (
 	"Everydo/internal/utils"
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"slices"
 	"time"
@@ -65,6 +64,7 @@ func (a *App) startup(ctx context.Context) {
 			})
 		}
 	}
+	checkTasksOrder(repositories.TasksRepo)
 	slog.Info("Все задания проверены")
 	a.repo = repositories
 }
@@ -74,9 +74,6 @@ func tickerFunc(
 	onEnterCategory func(*models.Category),
 	onExitCategory func(*models.Category),
 ) {
-	slog.Info("Tick --------------------")
-	fmt.Println(app.activeCategoriesTimes)
-
 	activeCategories, err := activeGameChecker.GetActiveCategories()
 	if err != nil {
 		if errors.Is(err, errs.ErrNoActiveCategory) {
@@ -111,11 +108,22 @@ func tickerFunc(
 
 }
 
-// Categories
+func checkTasksOrder(repo repository.ITasksRepository) {
+	tasks := repo.GetAllTasks()
+	for _, task := range tasks {
+		if task.Order == -1 {
+			nextOrder := repo.GetMaxOrder() + 1
+			repo.UpdateTask(int(task.ID), map[string]interface{}{"order": nextOrder})
+		}
+	}
+
+}
 
 func (a *App) OpenURL(url string) {
 	runtime.BrowserOpenURL(a.ctx, url)
 }
+
+// Categories
 
 func (a *App) UpdateCategory(id int, name, exeName string) error {
 	updates := map[string]interface{}{
@@ -155,6 +163,18 @@ func (a *App) DeleteCategory(id int) {
 }
 
 // Tasks
+type TaskOrder struct {
+	ID    int `json:"id"`
+	Order int `json:"order"`
+}
+
+func (a *App) UpdateTasksOrder(tasks []TaskOrder) error {
+	for _, t := range tasks {
+		a.repo.TasksRepo.UpdateTask(t.ID, map[string]interface{}{"order": t.Order})
+
+	}
+	return nil
+}
 
 func (a *App) CreateTask(
 	categoryID int,

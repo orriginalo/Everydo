@@ -1,3 +1,22 @@
+export namespace main {
+	
+	export class TaskOrder {
+	    id: number;
+	    order: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new TaskOrder(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.order = source["order"];
+	    }
+	}
+
+}
+
 export namespace models {
 	
 	export class Category {
@@ -33,6 +52,7 @@ export namespace models {
 	    last_done_at?: any;
 	    // Go type: time
 	    next_reset_at: any;
+	    order: number;
 	    // Go type: time
 	    created_at: any;
 	
@@ -53,6 +73,7 @@ export namespace models {
 	        this.reset_weekday = source["reset_weekday"];
 	        this.last_done_at = this.convertValues(source["last_done_at"], null);
 	        this.next_reset_at = this.convertValues(source["next_reset_at"], null);
+	        this.order = source["order"];
 	        this.created_at = this.convertValues(source["created_at"], null);
 	    }
 	
