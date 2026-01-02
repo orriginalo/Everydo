@@ -1,7 +1,6 @@
 package main
 
 import (
-	singleinstance "Everydo/internal/single_instance"
 	"Everydo/internal/tray"
 	"context"
 	"embed"
@@ -33,13 +32,6 @@ func main() {
 
 	switch *screen {
 	case "main":
-		ok := singleinstance.CheckSingleInstance(func() {
-			wruntime.WindowShow(app.ctx)
-			wruntime.Show(app.ctx)
-		})
-		if !ok {
-			return
-		}
 		runMainApp(app)
 	case "stats":
 		runStatisticsApp(app)
@@ -54,12 +46,13 @@ func runMainApp(app *App) {
 		Title:  "Everydo",
 		Width:  1024,
 		Height: 768,
-		// SingleInstanceLock: &options.SingleInstanceLock{
-		// 	OnSecondInstanceLaunch: func(secondInstanceData options.SecondInstanceData) {
-		// 		wruntime.WindowShow(app.ctx)
-		// 		wruntime.Show(app.ctx)
-		// 	},
-		// },
+		SingleInstanceLock: &options.SingleInstanceLock{
+
+			OnSecondInstanceLaunch: func(secondInstanceData options.SecondInstanceData) {
+				wruntime.WindowShow(app.ctx)
+				wruntime.Show(app.ctx)
+			},
+		},
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
